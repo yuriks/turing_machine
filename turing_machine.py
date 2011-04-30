@@ -1,80 +1,72 @@
+from itertools import izip
+
+class Tape:
+    def __init__(self):
+        self.cur_pos = 0
+        self.data = {}
+
+    def read(self):
+        return self.data.get(self.cur_pos, '@')
+
+    def writeAndMove(self, new_char, direction):
+        self.data[self.cur_pos] = new_char
+        self.cur_pos += direction
+
 class State:
-    def __init__(self, name='', stateTransitions={}, isAccepting=False):
+    def __init__(self, name, is_accepting=False):
         self.name = name
-        self.stateTransitions = stateTransitions
-        self.isAccepting = isAccepting
+        self.transitions = {}
+        self.is_accepting = is_accepting
 
-    def getStateToGoTo(self, element):
-        try:
-            return self.stateTransitions[element]
-        except KeyError:
-            return None
+    def getActions(self, inputs):
+        return self.transitions.get(inputs, None)
 
-    def setStateTransitions(self, stateTransitions={}):
-        self.stateTransitions = {}
-        self.stateTransitions = stateTransitions
-
-    def __str__(self):
-        return self.name + '\nisAcc: ' + str(self.isAccepting) + '\nstates: ' + str(self.stateTransitions) + '\n'
-
-    def __repr__(self):
-        return self.name
+    def addTransitions(self, conditions, actions):
+        self.transitions[conditions] = actions
 
 class TuringMachine:
-    def __init__(self, states=[], initState=None):
-        self.states = states
-        self.initState = initState
-        self.content = []
-        self.currentPosition = 0
-        self.currentState = initState
+    def __init__(self, init_state=None, num_tapes=1):
+        self.states = {}
+        self.current_state = init_state
 
-    def entry(self, content=[]):
-        self.content = content
-        self.content += '@@@' #@ representa o elemento vazio.
+        self.tapes = [Tape() for i in xrange(num_tapes)]
 
-        while True:
-            elem = self.content[self.currentPosition]
-            func_trans = self.currentState.getStateToGoTo(elem)
-            if func_trans == None:
-                 break
+    def setTape(self, string):
+        tape = self.tapes[0]
+        for i, c in enumerate(string):
+            tape[i] = c
 
-            elem = func_trans[0]
-            state = func_trans[1]
-            direction = func_trans[2]
-            self.step(elem, state, direction)
+    def step(self):
+        input_tuple = (tape.read() for tape in self.tapes)
+        actions = self.states[self.current_state].getNextState(input_tuples)
 
-        print 'Final Content: ' + str(self.content)
+        num_actions = (len(actions) - 1) / 2
 
-        return self.currentState.isAccepting
+        next_state = actions[0]
+        write_chars = actions[1:num_actions+1]
+        head_moves = actions[num_actions+1:]
+        for tape, char, move in izip(self.tapes, write_chars, head_moves):
+            tape.writeAndMove(char, move)
 
-    #direction: +1 (right), -1 (left) ou 0 (stay)
-    def step(self, element, state, direction):
-        print 'Current State: ' + self.currentState.name
-        print 'Go To: ' + state.name
-        print 'Read: ' + self.content[self.currentPosition]
-        print 'Write: ' + element
-        print 'Current Content: ' + self.strPosContent() + '\n'
+def entry(self, content=[]):
+    self.content = content
+    self.content += '@@@' #@ representa o elemento vazio.
 
-        self.currentState = state
-        self.content[self.currentPosition] = element
+    while True:
+        elem = self.content[self.currentPosition]
+        func_trans = self.currentState.getStateToGoTo(elem)
+        if func_trans == None:
+             break
 
-        if direction == -1 and self.currentPosition == 0:
-            self.currentPosition = 0
-        else:
-            self.currentPosition += direction
+        elem = func_trans[0]
+        state = func_trans[1]
+        direction = func_trans[2]
+        self.step(elem, state, direction)
 
-    def strPosContent(self):
-        s = ''
-        i = 0
-        for e in self.content:
-            isIt = i == self.currentPosition
-            if isIt:
-                s += '['
-            s += e
-            if isIt:
-                s += ']'
-            i += 1
-        return s
+    print 'Final Content: ' + str(self.content)
+
+    return self.currentState.isAccepting
+
 
 def main():
     #Maquina de turing que aceita se tiver o mesmo numero de
