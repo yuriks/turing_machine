@@ -28,22 +28,22 @@ class TuringMachine:
       self.currentPosition = 0
       self.currentState = initState
 
-   def entry(self, content=''):
+   def entry(self, content=[]):
       self.content = content
       self.content += '@@@' #@ representa o elemento vazio.
 
-      for e in self.content:
-         func_trans = self.currentState.getStateToGoTo(e)
+      while True:
+         elem = self.content[self.currentPosition]
+         func_trans = self.currentState.getStateToGoTo(elem)
          if func_trans == None:
-            print 'Final Content: ' + self.content
-            return self.currentState.isAcc
+             break
 
          elem = func_trans[0]
          state = func_trans[1]
          direction = func_trans[2]
          self.step(elem, state, direction)
 
-      print 'Final Content: ' + self.content
+      print 'Final Content: ' + str(self.content)
 
       return self.currentState.isAcc
 
@@ -56,10 +56,8 @@ class TuringMachine:
       print 'Current Content: ' + self.strPosContent() + '\n'
 
       self.currentState = state
-
-      l = list(self.content)
-      l[self.currentPosition] = element
-      self.content = ''.join(l)
+      self.content[self.currentPosition] = element
+      
       if direction == -1 and self.currentPosition == 0:
          self.currentPosition = 0
       else:
@@ -105,16 +103,14 @@ def main():
    state_3.setStateTransitions({'x': ('x', state_3, 1),
                                 '1': ('1', state_3, 1),
                                 '0': ('x', state_2, -1)})
+   
 
    states = [state_0, state_1, state_2, state_3, state_4]
    mt = TuringMachine(states=states, initState=state_0)
 
-   entry = '0110'
+   entry = '000011110101010101'
    print 'Entry: ' + entry
-   print 'Accepted: ' +  str(mt.entry(entry))
+   print 'Accepted: ' +  str(mt.entry(list(entry)))
 
 
 main()
-
-
-
