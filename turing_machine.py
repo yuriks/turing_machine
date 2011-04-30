@@ -1,8 +1,8 @@
 class State:
-    def __init__(self, name='', stateTransitions={}, isAcc=False):
+    def __init__(self, name='', stateTransitions={}, isAccepting=False):
         self.name = name
         self.stateTransitions = stateTransitions
-        self.isAcc = isAcc
+        self.isAccepting = isAccepting
 
     def getStateToGoTo(self, element):
         try:
@@ -15,7 +15,7 @@ class State:
         self.stateTransitions = stateTransitions
 
     def __str__(self):
-        return self.name + '\nisAcc: ' + str(self.isAcc) + '\nstates: ' + str(self.stateTransitions) + '\n'
+        return self.name + '\nisAcc: ' + str(self.isAccepting) + '\nstates: ' + str(self.stateTransitions) + '\n'
 
     def __repr__(self):
         return self.name
@@ -45,7 +45,7 @@ class TuringMachine:
 
         print 'Final Content: ' + str(self.content)
 
-        return self.currentState.isAcc
+        return self.currentState.isAccepting
 
     #direction: +1 (right), -1 (left) ou 0 (stay)
     def step(self, element, state, direction):
@@ -83,7 +83,7 @@ def main():
     state_1 = State('q1')
     state_2 = State('q2')
     state_3 = State('q3')
-    state_4 = State('q4', isAcc=True)
+    state_4 = State('q4', isAccepting=True)
 
     state_0.setStateTransitions({'x': ('@', state_0, 1), 
                                  '0': ('@', state_1, 1),
