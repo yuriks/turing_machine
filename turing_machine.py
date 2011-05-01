@@ -108,7 +108,7 @@ class Parser:
             if not tape_setted:
                 tm.setTapeNumber(len(cond) - 1)
                 tape_setted = True
-            
+            tm.addTransition(cond, action)
             
         
     def askEntry(self):
