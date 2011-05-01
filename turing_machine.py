@@ -82,7 +82,43 @@ class TuringMachine(object):
         while not self.hasFinished():
             self.step()
         return self.hasAccepted()
-
+    
+    def setTapeNumber(self, n):
+        self.tapes = [Tape() for i in xrange(n)]
+        
+class Parser:
+    def parseEntry(self, entry):
+        for val in entry:
+            entry[val] = entry[val].strip().replace(' ', '')
+        valid_entry = check_entry()
+        
+        if not valid_entry:
+            print "Entrada invalida."
+            return
+        
+        tm = TuringMachine(entry['states'][0])
+        for state in entry['states'].split(','):
+            tm.addState(state)
+        
+        tape_setted = False
+        for state_trans in entry['sig'].split('),'):
+            cond, action = state_trans.split('=')
+            cond = cond.lstrip('(').rstrip(')')
+            action = action.lstrip('(').rstrip(')')
+            if not tape_setted:
+                tm.setTapeNumber(len(cond) - 1)
+                tape_setted = True
+            
+            
+        
+    def askEntry(self):
+        self.gamma = raw_input('Gamma: ')
+        self.sigma = raw_input('Sigma: ')
+        self.states = raw_input('Q: ')
+        self.sig = raw_input('sig: ')
+        
+        self.parse_entry({'gamma' : gamma, 'sigma' : sigma, 'states' : states, 'sig' : sig})
+        
 def main():
     #Maquina de turing que aceita se tiver o mesmo numero de
     #0 e 1
