@@ -1,6 +1,6 @@
 from itertools import izip
 
-class Tape:
+class Tape(object):
     def __init__(self):
         self.cur_pos = 0
         self.data = {}
@@ -12,94 +12,112 @@ class Tape:
         self.data[self.cur_pos] = new_char
         self.cur_pos += direction
 
-class State:
-    def __init__(self, name, is_accepting=False):
-        self.name = name
+    def moveTo(self, pos):
+        self.cur_pos = pos
+
+class State(object):
+    def __init__(self, is_accepting=False):
         self.transitions = {}
         self.is_accepting = is_accepting
 
     def getActions(self, inputs):
-        return self.transitions.get(inputs, None)
+        return self.transitions.get(inputs, (None, None, 0))
 
-    def addTransitions(self, conditions, actions):
+    def addTransition(self, conditions, actions):
         self.transitions[conditions] = actions
 
-class TuringMachine:
-    def __init__(self, init_state=None, num_tapes=1):
-        self.states = {}
+    def isFinal(self):
+        return len(self.transitions) == 0
+
+    def isAccepting(self):
+        return self.is_accepting
+
+class TuringMachine(object):
+    def __init__(self, init_state, num_tapes=1):
+        self.states = {None: State(is_accepting=False)}
         self.current_state = init_state
 
         self.tapes = [Tape() for i in xrange(num_tapes)]
 
+    def addState(self, name, is_accepting=False):
+        if name in self.states:
+            raise KeyError
+        self.states[name] = State(is_accepting)
+
+    def addTransition(self, condition, actions):
+        state = condition[0]
+        self.states[state].addTransition(condition[1:], actions)
+
     def setTape(self, string):
         tape = self.tapes[0]
-        for i, c in enumerate(string):
-            tape[i] = c
+        for c in string:
+            tape.writeAndMove(c, 1)
+        tape.moveTo(0)
+
+    def hasFinished(self):
+        return self.states[self.current_state].isFinal()
+
+    def hasAccepted(self):
+        return self.hasFinished() and self.states[self.current_state].isAccepting()
 
     def step(self):
-        input_tuple = (tape.read() for tape in self.tapes)
-        actions = self.states[self.current_state].getNextState(input_tuples)
+        if self.hasFinished():
+            return
+
+        input_tuple = tuple(tape.read() for tape in self.tapes)
+        actions = self.states[self.current_state].getActions(input_tuple)
 
         num_actions = (len(actions) - 1) / 2
 
-        next_state = actions[0]
+        self.current_state = actions[0]
         write_chars = actions[1:num_actions+1]
         head_moves = actions[num_actions+1:]
         for tape, char, move in izip(self.tapes, write_chars, head_moves):
+            if char is None:
+                char = tape.read()
             tape.writeAndMove(char, move)
 
-def entry(self, content=[]):
-    self.content = content
-    self.content += '@@@' #@ representa o elemento vazio.
-
-    while True:
-        elem = self.content[self.currentPosition]
-        func_trans = self.currentState.getStateToGoTo(elem)
-        if func_trans == None:
-             break
-
-        elem = func_trans[0]
-        state = func_trans[1]
-        direction = func_trans[2]
-        self.step(elem, state, direction)
-
-    print 'Final Content: ' + str(self.content)
-
-    return self.currentState.isAccepting
-
+    # Warning: May never stop!
+    def run(self):
+        while not self.hasFinished():
+            self.step()
+        return self.hasAccepted()
 
 def main():
     #Maquina de turing que aceita se tiver o mesmo numero de
     #0 e 1
-    state_0 = State('q0')
-    state_1 = State('q1')
-    state_2 = State('q2')
-    state_3 = State('q3')
-    state_4 = State('q4', isAccepting=True)
+    tm = TuringMachine('q0')
 
-    state_0.setStateTransitions({'x': ('@', state_0, 1), 
-                                 '0': ('@', state_1, 1),
-                                 '1': ('@', state_3, 1),
-                                 '@': ('@', state_4, 1)})
+    tm.addState('q0')
+    tm.addState('q1')
+    tm.addState('q2')
+    tm.addState('q3')
+    tm.addState('qaceita', is_accepting=True)
 
-    state_1.setStateTransitions({'x': ('x', state_1, 1),
-                                 '0': ('0', state_1, 1),
-                                 '1': ('x', state_2, -1)})
+    tm.addTransition(('q0', 'x'), ('q0', '@', 1))
+    tm.addTransition(('q0', '0'), ('q1', '@', 1))
+    tm.addTransition(('q0', '1'), ('q3', '@', 1))
+    tm.addTransition(('q0', '@'), ('qaceita', '@', 0))
 
-    state_2.setStateTransitions({'0': ('0', state_2, -1),
-                                 '1': ('1', state_2, -1),
-                                 'x': ('x', state_2, -1),
-                                 '@': ('@', state_0, 1)})
+    tm.addTransition(('q1', 'x'), ('q1', 'x', 1))
+    tm.addTransition(('q1', '0'), ('q1', '0', 1))
+    tm.addTransition(('q1', '1'), ('q2', 'x', -1))
 
-    state_3.setStateTransitions({'x': ('x', state_3, 1),
-                                 '1': ('1', state_3, 1),
-                                 '0': ('x', state_2, -1)})
+    tm.addTransition(('q2', '0'), ('q2', '0', -1))
+    tm.addTransition(('q2', '1'), ('q2', '1', -1))
+    tm.addTransition(('q2', 'x'), ('q2', 'x', -1))
+    tm.addTransition(('q2', '@'), ('q0', '@', 1))
 
-    states = [state_0, state_1, state_2, state_3, state_4]
-    mt = TuringMachine(states=states, initState=state_0)
+    tm.addTransition(('q3', 'x'), ('q3', 'x', 1))
+    tm.addTransition(('q3', '1'), ('q3', '1', 1))
+    tm.addTransition(('q3', '0'), ('q2', 'x', -1))
 
     entry = '000011110101010101'
-    print 'Entry: ' + entry
-    print 'Accepted: ' +  str(mt.entry(list(entry)))
+
+    tm.setTape(entry)
+    tm.run()
+
+    print 'Entry:', entry
+    print 'Accepted:', tm.hasAccepted()
 
 main()
