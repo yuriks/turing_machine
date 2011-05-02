@@ -38,6 +38,8 @@ class EntryException(Exception):
         self.character = character
         
 class TuringMachine(object):
+    letter_direction_map = {'E': -1, 'D': 1, 'S': 0}
+
     def __init__(self, init_state, num_tapes=1):
         self.states = {None: State(is_accepting=False)}
         self.current_state = init_state
@@ -53,6 +55,11 @@ class TuringMachine(object):
 
     def addTransition(self, condition, actions):
         state = condition[0]
+
+        num_actions = (len(actions) - 1) / 2
+        for i in xrange(num_actions+1, len(actions)):
+            actions[i] = self.letter_direction_map[actions[i]]
+
         self.states[state].addTransition(condition[1:], actions)
 
     def setTape(self, string):
