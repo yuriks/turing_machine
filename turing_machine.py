@@ -118,13 +118,6 @@ class Parser:
             tm.addTransition(cond, action)
             
         return tm
-    def parseFromFile(self, filename):
-        entry = {}
-        with open(filename) as f:
-            for line in f:
-                identifier, val = line.replace(' ', '').split(':') 
-                entry[identifier.replace(' ', '')] = val.replace(' ', '')
-        return entry
         
 def askEntry():
     gamma = raw_input('Gamma: ')
@@ -133,6 +126,14 @@ def askEntry():
     sig = raw_input('sig: ')
 
     return {'Gamma' : gamma, 'Sigma' : sigma, 'Q' : states, 'sig' : sig}
+
+def parseFromFile(filename):
+    entry = {}
+    with open(filename) as f:
+        for line in f:
+            identifier, val = line.split(':')
+            entry[identifier.strip()] = val
+    return entry
         
 def main():
     parser = Parser()
@@ -140,7 +141,7 @@ def main():
     if len(sys.argv) == 1:
         machine_desc = askEntry()
     elif len(sys.argv) == 2:
-        machine_desc = parser.parseFromFile(sys.argv[1])
+        machine_desc = parseFromFile(sys.argv[1])
     elif len(sys.argv) == 0:
         return
         
