@@ -6,8 +6,10 @@ class Tape(object):
         self.cur_pos = 0
         self.data = {}
 
-    def read(self):
-        return self.data.get(self.cur_pos, 'b')
+    def read(self, pos=None):
+        if pos is None:
+            pos = self.cur_pos
+        return self.data.get(pos, 'b')
 
     def writeAndMove(self, new_char, direction):
         self.data[self.cur_pos] = new_char
@@ -18,9 +20,6 @@ class Tape(object):
     def moveTo(self, pos):
         self.cur_pos = pos
     
-    def getData(self):
-        return self.data
-        
     def getCurPos(self):
         return self.cur_pos
         
@@ -213,14 +212,19 @@ def main():
 
             while not tm.hasFinished():
                 for tape in tm.getTapes():
-                    for data_v in tape.getData():
-                        print tape.data[data_v],
-                    print ' '
-                    cur = tape.getCurPos()
-                    for i in xrange(0, cur):
-                        print ' ',
-                    print  '^'
-                    if tm.current_state != None:
+                    cur_pos = tape.getCurPos()
+
+                    sys.stdout.write(' ')
+                    for i in xrange(cur_pos - 10, cur_pos + 10):
+                        if i < 0:
+                            c = ' '
+                        else:
+                            c = tape.read(i)
+                        sys.stdout.write(c)
+                    sys.stdout.write('\n')
+
+                    sys.stdout.write(' ' * 11 + '^ ' + str(tape.getCurPos()) + '\n')
+                    if tm.current_state is not None:
                         print 'Estado: ' + tm.current_state,
                     else:
                         print 'Estado: qrejeita'
