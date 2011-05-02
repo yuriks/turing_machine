@@ -7,7 +7,7 @@ class Tape(object):
         self.data = {}
 
     def read(self):
-        return self.data.get(self.cur_pos, '@')
+        return self.data.get(self.cur_pos, 'b')
 
     def writeAndMove(self, new_char, direction):
         self.data[self.cur_pos] = new_char
