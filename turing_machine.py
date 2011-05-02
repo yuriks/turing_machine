@@ -248,7 +248,10 @@ def main():
                 else:
                     print "Rejeita"
     else:
-        interactive_shell(tm)
+        try:
+            interactive_shell(tm)
+        except KeyboardInterrupt:
+            pass
 
 
 if __name__ == "__main__":
