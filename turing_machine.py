@@ -91,7 +91,7 @@ class TuringMachine(object):
             self.step()
         return self.hasAccepted()
     
-    def setTapeNumber(self, n):
+    def setNumberOfTabes(self, n):
         self.tapes = [Tape() for i in xrange(n)]
     
     def setAplhabet(self, alpha):
@@ -105,16 +105,16 @@ class Parser:
         tm = TuringMachine(entry['Q'][0])
         for state in entry['Q'].split(','):
             tm.addState(state)
-        
-        tape_setted = False
+
+        tape_set = False
         for state_trans in entry['sig'].split('),'):
             cond, action = state_trans.split('=')
             cond = cond.lstrip('(').rstrip(')')
             action = action.lstrip('(').rstrip(')')
             print cond + '  ' + action
-            if not tape_setted:
-                tm.setTapeNumber(len(cond) - 1)
-                tape_setted = True
+            if not tape_set:
+                tm.setNumberOfTabes(len(cond) - 1)
+                tape_set = True
             tm.addTransition(cond, action)
             
         return tm
