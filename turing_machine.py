@@ -12,10 +12,16 @@ class Tape(object):
     def writeAndMove(self, new_char, direction):
         self.data[self.cur_pos] = new_char
         self.cur_pos += direction
-
+    
     def moveTo(self, pos):
         self.cur_pos = pos
-
+    
+    def getData(self):
+        return self.data
+        
+    def getCurPos(self):
+        return self.cur_pos
+        
 class State(object):
     def __init__(self, is_accepting=False):
         self.transitions = {}
@@ -111,6 +117,8 @@ class TuringMachine(object):
         if not alphabet.issubset(self.alphabet):
             raise ValueError("Input alphabet not contained in alphabet.")
         self.input_alphabet = alphabet
+    def getTapes(self):
+        return self.tapes
         
 def parseEntry(entry):
     for val in entry:
@@ -155,31 +163,64 @@ def parseFromFile(filename):
         
 def main():
     machine_desc = None
-    if len(sys.argv) == 1:
+    if len(sys.argv) == 2:
         machine_desc = askEntry()
-    elif len(sys.argv) == 2:
-        machine_desc = parseFromFile(sys.argv[1])
+    elif len(sys.argv) == 3:
+        machine_desc = parseFromFile(sys.argv[2])
     else:
         return
+    
+    mode = 0 #default
+    if '-b' in sys.argv:
+        mode = 1 #batch mode
+    elif '-i' in sys.argv:
+        mode = 2 #interative mode
+    
         
     tm = parseEntry(machine_desc)
     
-    for line in sys.stdin:
-        line = line.strip()
-        print 'Entrada: ' + line
-        try:
-            tm.setTape(line)
-        except EntryException, i:
-            print 'A entrada foi ignorada pois o caractere \'' + i.character + '\' nao pertence a alfabeto de entrada.'
-        while not tm.hasFinished():
-            print tm.current_state
-            tm.step()
+    if mode != 2:
+        for line in sys.stdin:
+            line = line.strip()
+            print 'Entrada: ' + line
             try:
-                raw_input()
-            except EOFError:
-                pass
-        if tm.hasAccepted():
-            print "Aceita"
-        else:
-            print "Rejeita"
+                tm.setTape(line)
+            except EntryException, i:
+                print 'A entrada foi ignorada pois o caractere \'' + i.character + '\' nao pertence a alfabeto de entrada.'
+            while not tm.hasFinished():
+                if mode != 1:
+                    print tm.current_state
+                tm.step()
+            if tm.hasAccepted():
+                print "Aceita"
+            else:
+                print "Rejeita"
+    else:
+        print "Para parar o programa, pressione ctrl + C."
+        while True:
+            entry = raw_input("Entrada: ")
+            try:
+                tm.setTape(entry)
+            except EntryException, i:
+                print 'A entrada foi ignorada pois o caractere \'' + i.character + '\' nao pertence a alfabeto de entrada.'
+                continue
+            for ch in entry:
+                for tape in tm.getTapes():
+                    for data_v in tape.getData():
+                        print tape.data[data_v],
+                    print ' '
+                    cur = tape.getCurPos()
+                    for i in xrange(0, cur):
+                        print ' ',
+                    print  '^'
+                    if tm.current_state != None:
+                        print 'Estado: ' + tm.current_state
+                tm.step()
+                
+            if tm.hasAccepted():
+                print "Aceita"
+            else:
+                print "Rejeita"
+            
+            
 main()
