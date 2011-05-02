@@ -1,4 +1,5 @@
 from itertools import izip
+import sys
 
 class Tape(object):
     def __init__(self):
@@ -32,6 +33,10 @@ class State(object):
     def isAccepting(self):
         return self.is_accepting
 
+class EntryException(Exception):
+    def __init__(self, character):
+        self.character = character
+        
 class TuringMachine(object):
     def __init__(self, init_state, num_tapes=1):
         self.states = {None: State(is_accepting=False)}
@@ -49,6 +54,9 @@ class TuringMachine(object):
         self.states[state].addTransition(condition[1:], actions)
 
     def setTape(self, string):
+        for ch in string:
+            if ch not in self.alphabet:
+                raise EntryException(ch)
         tape = self.tapes[0]
         for c in string:
             tape.writeAndMove(c, 1)
@@ -85,19 +93,17 @@ class TuringMachine(object):
     
     def setTapeNumber(self, n):
         self.tapes = [Tape() for i in xrange(n)]
+    
+    def setAplhabet(self, alpha):
+        self.alphabet = alpha
         
 class Parser:
     def parseEntry(self, entry):
         for val in entry:
             entry[val] = entry[val].strip().replace(' ', '')
-        valid_entry = check_entry()
         
-        if not valid_entry:
-            print "Entrada invalida."
-            return
-        
-        tm = TuringMachine(entry['states'][0])
-        for state in entry['states'].split(','):
+        tm = TuringMachine(entry['Q'][0])
+        for state in entry['Q'].split(','):
             tm.addState(state)
         
         tape_setted = False
@@ -105,55 +111,56 @@ class Parser:
             cond, action = state_trans.split('=')
             cond = cond.lstrip('(').rstrip(')')
             action = action.lstrip('(').rstrip(')')
+            print cond + '  ' + action
             if not tape_setted:
                 tm.setTapeNumber(len(cond) - 1)
                 tape_setted = True
             tm.addTransition(cond, action)
             
+        return tm
+    def parseFromFile(self, filename):
+        entry = {}
+        with open(filename) as f:
+            for line in f:
+                identifier, val = line.replace(' ', '').split(':') 
+                entry[identifier.replace(' ', '')] = val.replace(' ', '')
+        return entry
         
-    def askEntry(self):
-        self.gamma = raw_input('Gamma: ')
-        self.sigma = raw_input('Sigma: ')
-        self.states = raw_input('Q: ')
-        self.sig = raw_input('sig: ')
-        
-        self.parse_entry({'gamma' : gamma, 'sigma' : sigma, 'states' : states, 'sig' : sig})
+def askEntry():
+    gamma = raw_input('Gamma: ')
+    sigma = raw_input('Sigma: ')
+    states = raw_input('Q: ')
+    sig = raw_input('sig: ')
+
+    return {'gamma' : gamma, 'sigma' : sigma, 'Q' : states, 'sig' : sig}
         
 def main():
     #Maquina de turing que aceita se tiver o mesmo numero de
     #0 e 1
-    tm = TuringMachine('q0')
-
-    tm.addState('q0')
-    tm.addState('q1')
-    tm.addState('q2')
-    tm.addState('q3')
-    tm.addState('qaceita', is_accepting=True)
-
-    tm.addTransition(('q0', 'x'), ('q0', '@', 1))
-    tm.addTransition(('q0', '0'), ('q1', '@', 1))
-    tm.addTransition(('q0', '1'), ('q3', '@', 1))
-    tm.addTransition(('q0', '@'), ('qaceita', '@', 0))
-
-    tm.addTransition(('q1', 'x'), ('q1', 'x', 1))
-    tm.addTransition(('q1', '0'), ('q1', '0', 1))
-    tm.addTransition(('q1', '1'), ('q2', 'x', -1))
-
-    tm.addTransition(('q2', '0'), ('q2', '0', -1))
-    tm.addTransition(('q2', '1'), ('q2', '1', -1))
-    tm.addTransition(('q2', 'x'), ('q2', 'x', -1))
-    tm.addTransition(('q2', '@'), ('q0', '@', 1))
-
-    tm.addTransition(('q3', 'x'), ('q3', 'x', 1))
-    tm.addTransition(('q3', '1'), ('q3', '1', 1))
-    tm.addTransition(('q3', '0'), ('q2', 'x', -1))
-
-    entry = '000011110101010101'
-
-    tm.setTape(entry)
-    tm.run()
-
-    print 'Entry:', entry
-    print 'Accepted:', tm.hasAccepted()
-
+   
+    parser = Parser()
+    machine_desc = None
+    if len(sys.argv) == 1:
+        machine_desc = askEntry()
+    elif len(sys.argv) == 2:
+        machine_desc = parser.parseFromFile(sys.argv[1])
+    elif len(sys.argv) == 0:
+        return
+        
+    tm = parser.parseEntry(machine_desc)
+    
+    for line in sys.stdin:
+        print 'Entrada: ' + line
+        try:
+            tm.setTape(line)
+        except i:
+            print 'A entrada foi ignorada pois o caractere \'' + i.character + '\' nao pertence a alfabeto de entrada.'
+        while not tm.hasFinished():
+            print tm.current_state
+            tm.step()
+            raw_input()
+        if tm.hasAccepted():
+            print "Aceita"
+        else:
+            print "Rejeita"
 main()
