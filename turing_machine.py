@@ -12,7 +12,7 @@ class Tape(object):
     def writeAndMove(self, new_char, direction):
         self.data[self.cur_pos] = new_char
         self.cur_pos += direction
-    
+        
     def moveTo(self, pos):
         self.cur_pos = pos
     
@@ -47,6 +47,7 @@ class TuringMachine(object):
     letter_direction_map = {'E': -1, 'D': 1, 'S': 0}
 
     def __init__(self, init_state, num_tapes=1):
+        self.initial = init_state
         self.states = {None: State(is_accepting=False)}
         self.current_state = init_state
         self.alphabet = None # wildcard
@@ -119,6 +120,8 @@ class TuringMachine(object):
         self.input_alphabet = alphabet
     def getTapes(self):
         return self.tapes
+    def reset(self):
+        self.current_state = self.initial
         
 def parseEntry(entry):
     for val in entry:
@@ -138,6 +141,9 @@ def parseEntry(entry):
         cond, action = state_trans.split(")=(")
         cond = cond.lstrip('(').rstrip(')').split(',')
         action = action.lstrip('(').rstrip(')').split(',')
+        print cond,
+        print '   '
+        print action
         if not tape_set:
             tm.setNumberOfTabes(len(cond) - 1)
             tape_set = True
@@ -201,6 +207,7 @@ def main():
             entry = raw_input("Entrada: ")
             try:
                 tm.setTape(entry)
+                tm.reset()
             except EntryException, i:
                 print 'A entrada foi ignorada pois o caractere \'' + i.character + '\' nao pertence a alfabeto de entrada.'
                 continue
@@ -210,11 +217,15 @@ def main():
                         print tape.data[data_v],
                     print ' '
                     cur = tape.getCurPos()
+                    print cur
                     for i in xrange(0, cur):
                         print ' ',
                     print  '^'
                     if tm.current_state != None:
-                        print 'Estado: ' + tm.current_state
+                        print 'Estado: ' + tm.current_state,
+                    else:
+                        print 'Estado: qrejeita'
+                    raw_input()
                 tm.step()
                 
             if tm.hasAccepted():
