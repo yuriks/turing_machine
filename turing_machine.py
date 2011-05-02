@@ -135,9 +135,6 @@ def askEntry():
     return {'gamma' : gamma, 'sigma' : sigma, 'Q' : states, 'sig' : sig}
         
 def main():
-    #Maquina de turing que aceita se tiver o mesmo numero de
-    #0 e 1
-   
     parser = Parser()
     machine_desc = None
     if len(sys.argv) == 1:
