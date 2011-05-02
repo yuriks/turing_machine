@@ -25,7 +25,7 @@ class State(object):
         return self.transitions.get(inputs, (None, None, 0))
 
     def addTransition(self, conditions, actions):
-        self.transitions[conditions] = actions
+        self.transitions[tuple(conditions)] = actions
 
     def isFinal(self):
         return len(self.transitions) == 0
