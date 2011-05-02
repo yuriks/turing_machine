@@ -132,7 +132,7 @@ def askEntry():
     states = raw_input('Q: ')
     sig = raw_input('sig: ')
 
-    return {'gamma' : gamma, 'sigma' : sigma, 'Q' : states, 'sig' : sig}
+    return {'Gamma' : gamma, 'Sigma' : sigma, 'Q' : states, 'sig' : sig}
         
 def main():
     parser = Parser()
