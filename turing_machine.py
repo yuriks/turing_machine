@@ -16,13 +16,13 @@ class Tape(object):
         self.cur_pos += direction
         if self.cur_pos < 0:
             self.cur_pos = 0
-        
+
     def moveTo(self, pos):
         self.cur_pos = pos
-    
+
     def getCurPos(self):
         return self.cur_pos
-        
+
 class State(object):
     def __init__(self, is_accepting=False):
         self.transitions = {}
@@ -43,7 +43,7 @@ class State(object):
 class EntryException(Exception):
     def __init__(self, character):
         self.character = character
-        
+
 class TuringMachine(object):
     letter_direction_map = {'E': -1, 'D': 1, 'S': 0}
 
@@ -108,10 +108,10 @@ class TuringMachine(object):
         while not self.hasFinished():
             self.step()
         return self.hasAccepted()
-    
+
     def setNumberOfTabes(self, n):
         self.tapes = [Tape() for i in xrange(n)]
-    
+
     def setAlphabet(self, alphabet):
         self.alphabet = alphabet
 
@@ -123,7 +123,7 @@ class TuringMachine(object):
         return self.tapes
     def reset(self):
         self.current_state = self.initial
-        
+
 def parseEntry(entry):
     for val in entry:
         entry[val] = entry[val].strip().replace(' ', '')
@@ -146,9 +146,9 @@ def parseEntry(entry):
             tm.setNumberOfTabes(len(cond) - 1)
             tape_set = True
         tm.addTransition(cond, action)
-        
+
     return tm
-        
+
 def askEntry():
     gamma = raw_input('Gamma: ')
     sigma = raw_input('Sigma: ')
@@ -164,7 +164,7 @@ def parseFromFile(filename):
             identifier, val = line.split(':')
             entry[identifier.strip()] = val
     return entry
-        
+
 def main():
     machine_desc = None
     if len(sys.argv) == 2:
@@ -173,16 +173,16 @@ def main():
         machine_desc = parseFromFile(sys.argv[2])
     else:
         return
-    
+
     mode = 0 #default
     if '-b' in sys.argv:
         mode = 1 #batch mode
     elif '-i' in sys.argv:
         mode = 2 #interative mode
-    
-        
+
+
     tm = parseEntry(machine_desc)
-    
+
     if mode != 2:
         for line in sys.stdin:
             line = line.strip()
@@ -230,11 +230,10 @@ def main():
                         print 'Estado: qrejeita'
                     raw_input()
                 tm.step()
-                
+
             if tm.hasAccepted():
                 print "Aceita"
             else:
                 print "Rejeita"
-            
-            
+
 main()
