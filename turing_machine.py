@@ -119,12 +119,14 @@ class TuringMachine(object):
         if not alphabet.issubset(self.alphabet):
             raise ValueError("Input alphabet not contained in alphabet.")
         self.input_alphabet = alphabet
+
     def getTapes(self):
         return self.tapes
+
     def reset(self):
         self.current_state = self.initial
 
-def parseEntry(entry):
+def parseDescription(entry):
     for val in entry:
         entry[val] = entry[val].strip().replace(' ', '')
 
@@ -149,7 +151,7 @@ def parseEntry(entry):
 
     return tm
 
-def askEntry():
+def readMachineInteractive():
     gamma = raw_input('Gamma: ')
     sigma = raw_input('Sigma: ')
     states = raw_input('Q: ')
@@ -157,7 +159,7 @@ def askEntry():
 
     return {'Gamma' : gamma, 'Sigma' : sigma, 'Q' : states, 'sig' : sig}
 
-def parseFromFile(filename):
+def readMachineFile(filename):
     entry = {}
     with open(filename) as f:
         for line in f:
@@ -165,76 +167,86 @@ def parseFromFile(filename):
             entry[identifier.strip()] = val
     return entry
 
+def interactive_shell(tm):
+    print "Para sair, pressione Ctrl + C."
+    while True:
+        entry = raw_input("Entrada: ")
+        try:
+            tm.setTape(entry)
+            tm.reset()
+        except EntryException, i:
+            print "Erro: '%c' nao pertence ao alfabeto de entrada." % (i.character,)
+            continue
+
+        while not tm.hasFinished():
+            for tape in tm.getTapes():
+                cur_pos = tape.getCurPos()
+
+                sys.stdout.write('1 ')
+                for i in xrange(cur_pos - 10, cur_pos + 10):
+                    if i < 0:
+                        c = ' '
+                    else:
+                        c = tape.read(i)
+                    sys.stdout.write(c)
+                sys.stdout.write('\n')
+
+                sys.stdout.write(' ' * 12 + '^ ' + str(tape.getCurPos()) + '\n')
+                if tm.current_state is not None:
+                    print 'Estado: ' + tm.current_state,
+                else:
+                    print 'Estado: qrejeita'
+                raw_input()
+            tm.step()
+
+        if tm.hasAccepted():
+            print "Aceita"
+        else:
+            print "Rejeita"
+
+from optparse import OptionParser
+
 def main():
-    machine_desc = None
-    if len(sys.argv) == 2:
-        machine_desc = askEntry()
-    elif len(sys.argv) == 3:
-        machine_desc = parseFromFile(sys.argv[2])
+    interactive = sys.stdin.isatty() and sys.stdout.isatty()
+
+    parser = OptionParser(usage="usage: %prog [options]")
+    parser.add_option('-m', '--machine', dest="machine_file",
+                      help="File to read turing machine description from, instead of stdin.")
+    parser.add_option('-b', '--batch',
+                      action="store_false", dest="interactive",
+                      help="Run in batch mode: Reads several inputs and only prints if they're accepted or not.")
+    parser.add_option('-i', '--interactive',
+                      action="store_true",  dest="interactive", default=interactive,
+                      help="Run in interactive mode: Reads an input and let's you step through it's execution.")
+
+    options, args = parser.parse_args()
+
+    if options.machine_file is None:
+        machine_desc = readMachineInteractive()
     else:
-        return
+        machine_desc = readMachineFile(options.machine_file)
 
-    mode = 0 #default
-    if '-b' in sys.argv:
-        mode = 1 #batch mode
-    elif '-i' in sys.argv:
-        mode = 2 #interative mode
+    tm = parseDescription(machine_desc)
 
+    if not options.interactive:
+        while True:
+            line = sys.stdin.readline()
+            if len(line) == 0:
+                break
 
-    tm = parseEntry(machine_desc)
-
-    if mode != 2:
-        for line in sys.stdin:
             line = line.strip()
-            print 'Entrada: ' + line
             try:
                 tm.setTape(line)
             except EntryException, i:
-                print 'A entrada foi ignorada pois o caractere \'' + i.character + '\' nao pertence a alfabeto de entrada.'
-            while not tm.hasFinished():
-                if mode != 1:
-                    print tm.current_state
-                tm.step()
-            if tm.hasAccepted():
-                print "Aceita"
+                print "Erro: '%c' nao pertence ao alfabeto de entrada." % (i.character,)
             else:
-                print "Rejeita"
+                if tm.run():
+                    print "Aceita"
+                else:
+                    print "Rejeita"
     else:
-        print "Para parar o programa, pressione ctrl + C."
-        while True:
-            entry = raw_input("Entrada: ")
-            try:
-                tm.setTape(entry)
-                tm.reset()
-            except EntryException, i:
-                print 'A entrada foi ignorada pois o caractere \'' + i.character + '\' nao pertence a alfabeto de entrada.'
-                continue
+        interactive_shell(tm)
 
-            while not tm.hasFinished():
-                for tape in tm.getTapes():
-                    cur_pos = tape.getCurPos()
-
-                    sys.stdout.write(' ')
-                    for i in xrange(cur_pos - 10, cur_pos + 10):
-                        if i < 0:
-                            c = ' '
-                        else:
-                            c = tape.read(i)
-                        sys.stdout.write(c)
-                    sys.stdout.write('\n')
-
-                    sys.stdout.write(' ' * 11 + '^ ' + str(tape.getCurPos()) + '\n')
-                    if tm.current_state is not None:
-                        print 'Estado: ' + tm.current_state,
-                    else:
-                        print 'Estado: qrejeita'
-                    raw_input()
-                tm.step()
-
-            if tm.hasAccepted():
-                print "Aceita"
-            else:
-                print "Rejeita"
 
 if __name__ == "__main__":
     main()
