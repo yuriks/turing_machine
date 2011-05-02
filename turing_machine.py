@@ -213,7 +213,8 @@ def main():
             except EntryException, i:
                 print 'A entrada foi ignorada pois o caractere \'' + i.character + '\' nao pertence a alfabeto de entrada.'
                 continue
-            for ch in entry:
+
+            while not tm.hasFinished():
                 for tape in tm.getTapes():
                     for data_v in tape.getData():
                         print tape.data[data_v],
