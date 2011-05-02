@@ -48,13 +48,13 @@ class TuringMachine(object):
     letter_direction_map = {'E': -1, 'D': 1, 'S': 0}
 
     def __init__(self, init_state, num_tapes=1):
-        self.initial = init_state
+        self.initial_state = init_state
         self.states = {None: State(is_accepting=False)}
-        self.current_state = init_state
         self.alphabet = None # wildcard
         self.input_alphabet = None # wildcard
 
-        self.tapes = [Tape() for i in xrange(num_tapes)]
+        self.tapes = [None] * num_tapes
+        self.reset()
 
     def addState(self, name, is_accepting=False):
         if name in self.states:
@@ -110,7 +110,8 @@ class TuringMachine(object):
         return self.hasAccepted()
 
     def setNumberOfTabes(self, n):
-        self.tapes = [Tape() for i in xrange(n)]
+        self.tapes = [None] * n
+        self.reset()
 
     def setAlphabet(self, alphabet):
         self.alphabet = alphabet
@@ -124,7 +125,8 @@ class TuringMachine(object):
         return self.tapes
 
     def reset(self):
-        self.current_state = self.initial
+        self.current_state = self.initial_state
+        self.tapes = [Tape() for i in xrange(len(self.tapes))]
 
 def parseDescription(entry):
     for val in entry:
@@ -172,8 +174,8 @@ def interactive_shell(tm):
     while True:
         entry = raw_input("Entrada: ")
         try:
-            tm.setTape(entry)
             tm.reset()
+            tm.setTape(entry)
         except EntryException, i:
             print "Erro: '%c' nao pertence ao alfabeto de entrada." % (i.character,)
             continue
@@ -236,6 +238,7 @@ def main():
 
             line = line.strip()
             try:
+                tm.reset()
                 tm.setTape(line)
             except EntryException, i:
                 print "Erro: '%c' nao pertence ao alfabeto de entrada." % (i.character,)
