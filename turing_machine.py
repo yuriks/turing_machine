@@ -12,6 +12,8 @@ class Tape(object):
     def writeAndMove(self, new_char, direction):
         self.data[self.cur_pos] = new_char
         self.cur_pos += direction
+        if self.cur_pos < 0:
+            self.cur_pos = 0
         
     def moveTo(self, pos):
         self.cur_pos = pos
