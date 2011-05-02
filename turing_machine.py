@@ -115,20 +115,21 @@ class TuringMachine(object):
 def parseEntry(entry):
     for val in entry:
         entry[val] = entry[val].strip().replace(' ', '')
-    
+
+    entry['Q'] = entry['Q'].split(',')
     tm = TuringMachine(entry['Q'][0])
-    for state in entry['Q'].split(','):
+    for state in entry['Q'][:-1]:
         tm.addState(state)
+    tm.addState(entry['Q'][-1], is_accepting=True)
 
     tm.setAlphabet(set(entry['Gamma'].split(',')))
     tm.setInputAlphabet(set(entry['Sigma'].split(',')))
 
     tape_set = False
-    for state_trans in entry['sig'].split('),'):
-        cond, action = state_trans.split('=')
-        cond = cond.lstrip('(').rstrip(')')
-        action = action.lstrip('(').rstrip(')')
-        print cond + '  ' + action
+    for state_trans in entry['sig'].split("),("):
+        cond, action = state_trans.split(")=(")
+        cond = cond.lstrip('(').rstrip(')').split(',')
+        action = action.lstrip('(').rstrip(')').split(',')
         if not tape_set:
             tm.setNumberOfTabes(len(cond) - 1)
             tape_set = True
@@ -158,21 +159,25 @@ def main():
         machine_desc = askEntry()
     elif len(sys.argv) == 2:
         machine_desc = parseFromFile(sys.argv[1])
-    elif len(sys.argv) == 0:
+    else:
         return
         
     tm = parseEntry(machine_desc)
     
     for line in sys.stdin:
+        line = line.strip()
         print 'Entrada: ' + line
         try:
             tm.setTape(line)
-        except i:
+        except EntryException, i:
             print 'A entrada foi ignorada pois o caractere \'' + i.character + '\' nao pertence a alfabeto de entrada.'
         while not tm.hasFinished():
             print tm.current_state
             tm.step()
-            raw_input()
+            try:
+                raw_input()
+            except EOFError:
+                pass
         if tm.hasAccepted():
             print "Aceita"
         else:
