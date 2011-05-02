@@ -97,27 +97,26 @@ class TuringMachine(object):
     def setAplhabet(self, alpha):
         self.alphabet = alpha
         
-class Parser:
-    def parseEntry(self, entry):
-        for val in entry:
-            entry[val] = entry[val].strip().replace(' ', '')
-        
-        tm = TuringMachine(entry['Q'][0])
-        for state in entry['Q'].split(','):
-            tm.addState(state)
+def parseEntry(entry):
+    for val in entry:
+        entry[val] = entry[val].strip().replace(' ', '')
+    
+    tm = TuringMachine(entry['Q'][0])
+    for state in entry['Q'].split(','):
+        tm.addState(state)
 
-        tape_set = False
-        for state_trans in entry['sig'].split('),'):
-            cond, action = state_trans.split('=')
-            cond = cond.lstrip('(').rstrip(')')
-            action = action.lstrip('(').rstrip(')')
-            print cond + '  ' + action
-            if not tape_set:
-                tm.setNumberOfTabes(len(cond) - 1)
-                tape_set = True
-            tm.addTransition(cond, action)
-            
-        return tm
+    tape_set = False
+    for state_trans in entry['sig'].split('),'):
+        cond, action = state_trans.split('=')
+        cond = cond.lstrip('(').rstrip(')')
+        action = action.lstrip('(').rstrip(')')
+        print cond + '  ' + action
+        if not tape_set:
+            tm.setNumberOfTabes(len(cond) - 1)
+            tape_set = True
+        tm.addTransition(cond, action)
+        
+    return tm
         
 def askEntry():
     gamma = raw_input('Gamma: ')
@@ -136,7 +135,6 @@ def parseFromFile(filename):
     return entry
         
 def main():
-    parser = Parser()
     machine_desc = None
     if len(sys.argv) == 1:
         machine_desc = askEntry()
@@ -145,7 +143,7 @@ def main():
     elif len(sys.argv) == 0:
         return
         
-    tm = parser.parseEntry(machine_desc)
+    tm = parseEntry(machine_desc)
     
     for line in sys.stdin:
         print 'Entrada: ' + line
