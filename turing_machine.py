@@ -41,6 +41,8 @@ class TuringMachine(object):
     def __init__(self, init_state, num_tapes=1):
         self.states = {None: State(is_accepting=False)}
         self.current_state = init_state
+        self.alphabet = None # wildcard
+        self.input_alphabet = None # wildcard
 
         self.tapes = [Tape() for i in xrange(num_tapes)]
 
@@ -54,9 +56,10 @@ class TuringMachine(object):
         self.states[state].addTransition(condition[1:], actions)
 
     def setTape(self, string):
-        for ch in string:
-            if ch not in self.alphabet:
-                raise EntryException(ch)
+        if self.alphabet is not None:
+            for ch in string:
+                if ch not in self.input_alphabet:
+                    raise EntryException(ch)
         tape = self.tapes[0]
         for c in string:
             tape.writeAndMove(c, 1)
@@ -94,8 +97,13 @@ class TuringMachine(object):
     def setNumberOfTabes(self, n):
         self.tapes = [Tape() for i in xrange(n)]
     
-    def setAplhabet(self, alpha):
-        self.alphabet = alpha
+    def setAlphabet(self, alphabet):
+        self.alphabet = alphabet
+
+    def setInputAlphabet(self, alphabet):
+        if not alphabet.issubset(self.alphabet):
+            raise ValueError("Input alphabet not contained in alphabet.")
+        self.input_alphabet = alphabet
         
 def parseEntry(entry):
     for val in entry:
@@ -104,6 +112,9 @@ def parseEntry(entry):
     tm = TuringMachine(entry['Q'][0])
     for state in entry['Q'].split(','):
         tm.addState(state)
+
+    tm.setAlphabet(set(entry['Gamma'].split(',')))
+    tm.setInputAlphabet(set(entry['Sigma'].split(',')))
 
     tape_set = False
     for state_trans in entry['sig'].split('),'):
