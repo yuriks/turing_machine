@@ -143,9 +143,6 @@ def parseEntry(entry):
         cond, action = state_trans.split(")=(")
         cond = cond.lstrip('(').rstrip(')').split(',')
         action = action.lstrip('(').rstrip(')').split(',')
-        print cond,
-        print '   '
-        print action
         if not tape_set:
             tm.setNumberOfTabes(len(cond) - 1)
             tape_set = True
@@ -220,7 +217,6 @@ def main():
                         print tape.data[data_v],
                     print ' '
                     cur = tape.getCurPos()
-                    print cur
                     for i in xrange(0, cur):
                         print ' ',
                     print  '^'
