@@ -91,7 +91,7 @@ class TuringMachine(object):
             self.step()
         return self.hasAccepted()
     
-    def setTapeNumber(self, n):
+    def setNumberOfTabes(self, n):
         self.tapes = [Tape() for i in xrange(n)]
     
     def setAplhabet(self, alpha):
@@ -105,26 +105,27 @@ class Parser:
         tm = TuringMachine(entry['Q'][0])
         for state in entry['Q'].split(','):
             tm.addState(state)
-        
-        tape_setted = False
+
+        tape_set = False
         for state_trans in entry['sig'].split('),'):
             cond, action = state_trans.split('=')
             cond = cond.lstrip('(').rstrip(')')
             action = action.lstrip('(').rstrip(')')
             print cond + '  ' + action
-            if not tape_setted:
-                tm.setTapeNumber(len(cond) - 1)
-                tape_setted = True
+            if not tape_set:
+                tm.setNumberOfTabes(len(cond) - 1)
+                tape_set = True
             tm.addTransition(cond, action)
             
         return tm
-    def parseFromFile(self, filename):
-        entry = {}
-        with open(filename) as f:
-            for line in f:
-                identifier, val = line.replace(' ', '').split(':') 
-                entry[identifier.replace(' ', '')] = val.replace(' ', '')
-        return entry
+        
+def parseFromFile(filename):
+    entry = {}
+    with open(filename) as f:
+        for line in f:
+            identifier, val = line.replace(' ', '').split(':') 
+            entry[identifier.replace(' ', '')] = val.replace(' ', '')
+    return entry
         
 def askEntry():
     gamma = raw_input('Gamma: ')
@@ -134,16 +135,13 @@ def askEntry():
 
     return {'gamma' : gamma, 'sigma' : sigma, 'Q' : states, 'sig' : sig}
         
-def main():
-    #Maquina de turing que aceita se tiver o mesmo numero de
-    #0 e 1
-   
+def main():   
     parser = Parser()
     machine_desc = None
     if len(sys.argv) == 1:
         machine_desc = askEntry()
     elif len(sys.argv) == 2:
-        machine_desc = parser.parseFromFile(sys.argv[1])
+        machine_desc = parseFromFile(sys.argv[1])
     elif len(sys.argv) == 0:
         return
         
